@@ -63,6 +63,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# VsCode
+.vscode
+
 # Sphinx documentation
 docs/_build/
 

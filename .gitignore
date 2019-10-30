@@ -81,6 +81,9 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
+# Scratch Folder
+Scratch/
+
 # Environments
 .env
 .venv
@@ -102,3 +105,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+# vscode configuration files
+.vscode/

@@ -1,4 +1,4 @@
-import pandas as np
+import numpy as np
 
 class neural_net:
 
@@ -6,3 +6,5 @@ class neural_net:
         self.weights = weights
         self.biases = biases
 
+    def get_output(inputs):
+        pass

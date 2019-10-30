@@ -1,9 +1,22 @@
 import numpy as np
 import gym
+import time
+
 
 if __name__ == "__main__":
-    env = gym.make('CartPole-v1')
+    env = gym.make('CartPole-v0')
     env.reset()
-    for _ in range(200):
+    
+    done = False
+    iteration = 0
+    while(not done and iteration < 1000):
+        iteration += 1
         env.render()
-        env.step(1)
+        observation, reward, done, info = env.step(env.action_space.sample()) # take a random action
+        print(observation)
+        time.sleep(0.1)
+    
+    
+    env.close()
+
+

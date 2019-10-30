@@ -19,23 +19,41 @@
         - Repeat until new ANN[N] = previous ANN[n]
 '''
 import gym
+import numpy as np
+import time
 from sklearn.neural_network import MLPClassifier
 
-classifier = MLPClassifier(batch_size=1,max_iter=1, solver='sgd', activation='relu', learning_rate='invscaling', hidden_layer_sizes=hlayer_size, random_state=1)
-partial_fit(np.array([env.observation_space.sample()]), np.array([env.action_space.sample()]), classes=np.arange(env.action_space.n)
+#partial_fit(np.array([env.observation_space.sample()]), np.array([env.action_space.sample()]), classes=np.arange(env.action_space.n)
 
-env = gym.make('CartPole-v0')
-for i_episode in range(20):
-    observation = env.reset()
-    for t in range(100):
-        env.render()
-        print(observation)
-        action = env.action_space.sample()
-        observation, reward, done, info = env.step(action)
-        if done:
-            print("Episode finished after {} timesteps".format(t+1))
-            break
-env.close()
+class NN:
+    def __init__(self,sample_size):
+        self.env = gym.make('CartPole-v0')
+        self.bias = 0
+        self.population_size = 50
+        self.generations = 20
+        self.mutation_rate  = 0.001
+        self.sample_size = sample_size
+        self.layer_size = sample_size * 2 / 3
+        # run until max iterations leave
+        self.total_iterations = np.inf 
+        self.classifier = MLPClassifier(batch_size=1,max_iter=1, solver='sgd', activation='relu', learning_rate='invscaling', hidden_layer_sizes=self.layer_size, random_state=1)
 
+    def fit(self):
+        #s_size = self.env.observation_space.sample
+        s_array = np.array([self.env.observation_space.sample()])
+        self.classifier.partial_fit(s_array, np.array([self.env.action_space.sample()]), classes=np.arange(self.env.action_space.n))
 
-
+if __name__ == "__main__":
+    ANN = NN(200)
+    for i_episode in range(20):
+        observation = ANN.env.reset()
+        for t in range(100):
+            ANN.env.render()
+            print(observation)
+            action = ANN.env.action_space.sample()
+            observation, reward, done, info = ANN.env.step(action)
+            time.sleep(0.05) # temp, limit fps
+            if done:
+                print("Episode finished after {} timesteps".format(t+1))
+                break
+    ANN.env.close()

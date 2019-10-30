@@ -1,7 +1,5 @@
-import numpy as np
 import gym
 import time
-
 
 if __name__ == "__main__":
     env = gym.make('CartPole-v0')
@@ -14,9 +12,8 @@ if __name__ == "__main__":
         env.render()
         observation, reward, done, info = env.step(env.action_space.sample()) # take a random action
         print(observation)
-        time.sleep(0.1)
-    
-    
+        time.sleep(0.05)
+            
     env.close()
 
 

@@ -40,5 +40,5 @@ class ANN:
             observation, reward, done, info = env.step(env.action_space.sample()) # take a random action
             self.fitness += reward
             #print(observation)
-            time.sleep(0.025)
+            time.sleep(0.01)
         print(self.fitness)

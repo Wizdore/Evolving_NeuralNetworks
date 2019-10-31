@@ -4,14 +4,12 @@ import ANN
 import numpy as np
 
 if __name__ == "__main__":
-    results = []
     with gym.make('CartPole-v0') as env:
-        for _ in range(50):
-            network = ANN.ANN(np.random.uniform(0.0, 1.0, size=29))
-            network.render(env) # simulate
-            results.append(network) # evaluate?
+        population = [ANN.ANN(np.random.uniform(0.0, 1.0, size=29)) for _ in range(50)] # Initial population
+        for gen in range(10): # generation
+            for network in population:
+                network.render(env) # simulate
 
-        results = sorted(results, key=lambda x: x.fitness, reverse=True)
-        print("Best score:", results[0].fitness)
-
-        # Run again with the 50% best?
+            population = sorted(population, key=lambda x: x.fitness, reverse=True) # Sort population based on best fitness.
+            print("Best score for generation {} is {}.".format(gen+1, population[0].fitness))
+            # mutate , GA stuff, make children, modify initial population ? scrap 50% worst entries

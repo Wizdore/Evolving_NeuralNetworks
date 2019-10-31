@@ -1,11 +1,10 @@
 import gym
-import time
 import ANN
 import numpy as np
 
 if __name__ == "__main__":
     with gym.make('CartPole-v0') as env:
-        population = [ANN.ANN(np.random.uniform(0.0, 1.0, size=29)) for _ in range(50)] # Initial population
+        population = [ANN.ANN(np.random.uniform(-1.0, 1.0, size=29)) for _ in range(50)] # Initial population
         for gen in range(10): # generation
             for network in population:
                 network.render(env) # simulate

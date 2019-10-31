@@ -1,5 +1,4 @@
 import numpy as np
-import time
 
 # Fully connected 5-4-1 Neural network
 # Code not **tested**, anyone wanna hand check to test the code? :D
@@ -40,5 +39,4 @@ class ANN:
             observation, reward, done, info = env.step(env.action_space.sample()) # take a random action
             self.fitness += reward
             #print(observation)
-            time.sleep(0.01)
         print(self.fitness)

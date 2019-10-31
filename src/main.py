@@ -1,7 +1,7 @@
 import gym
-import time
 import ANN
 import numpy as np
+import pandas as pd
 
 def crossover(parent1, parent2):
     """
@@ -31,6 +31,17 @@ def mutate_all(state, rate):
     return state
 
 if __name__ == "__main__":
+    """
+    Start execution of ANN Evolution here:
+    - Create environment
+    - Create an initial population
+    - Run through X generations
+    - For each generation run through Y population
+    - For each population calculate fitness and rank the population for generation Z based on high-low fitness
+    - Also keep track of the average score for each generation
+    - Use the data to generate some data frame for use in excel (save as .csv)
+    - WHAT ELSE ?
+    """
     with gym.make('CartPole-v0') as env:
         population = [ANN.ANN(np.random.uniform(0.0, 1.0, size=29)) for _ in range(50)] # Initial population
         for gen in range(10): # generation

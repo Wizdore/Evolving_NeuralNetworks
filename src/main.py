@@ -1,5 +1,7 @@
 import gym
 import numpy as np
+import signal
+import matplotlib.pyplot as plt
 
 env = gym.make('CartPole-v0')
 
@@ -17,29 +19,31 @@ class ANN:
         hl_weight = self.state[0:16].reshape(4,4)       # First 20 elements are weights for input to hidden layer edges
         hl_bias = self.state[16:20]                     # Next 4 elements are for 4 nodes of hidden layer
         ol_weight = self.state[20:24].reshape(4,1)      # Next 4 elements are for 4 weights for hidden to output edges 
-        ol_bias = self.state[-1]                     # Next 1 element is the bias of the output layer
+        #ol_bias = self.state[-1]                     # Next 1 element is the bias of the output layer
 
         inputs = self.activation(inputs)                # Normalizing the input values
 
         hl_result = (np.matmul(inputs, hl_weight) + hl_bias)        # calc from input to hidden layer (is linear activation good enough?!)
-        ol_result = (np.matmul(hl_result, ol_weight) + ol_bias)     # calc from Hidden to output layer
+        ol_result = (np.matmul(hl_result, ol_weight))     # calc from Hidden to output layer
 
         return ol_result        # returning raw result of the network
 
 
-def crossover(parent1, parent2):
+def crossover(parent1, parent2, crossSize=4):
     """
     Parent1 and Parent2 are 2 states from 2 networks.
     The two parents are chosen from the top performers in the generation.
     Returns a tuple containing child 1 and child 2 which has mixed values from parent 1 and 2.
     """
-    pivot = np.random.randint(0, len(parent1)) # Pick a random number.
+    pivotMin = np.random.randint(0, len(parent1))
+    pivotMax = np.random.randint(pivotMin, len(parent1))
+
     # Create children.
     child1 = parent1
     child2 = parent2
     # Crossover data.
-    child1[:pivot] = parent2[:pivot]
-    child2[:pivot] = parent1[:pivot]
+    child1[pivotMin:pivotMax] = parent2[pivotMin:pivotMax]
+    child2[pivotMin:pivotMax] = parent1[pivotMin:pivotMax]
     
     return child1, child2
 
@@ -53,7 +57,7 @@ def mutate_all(child, rate=0.001):
         if rate >= m[idx]:
             child[idx] = np.random.uniform(-1,1)
 
-def mutation_single(child, rate=0.5):
+def mutation_single(child, rate=0.025):
     """
     Mutate single index (element) in state if mutation probability = TRUE.
     """
@@ -61,7 +65,7 @@ def mutation_single(child, rate=0.5):
         child[np.random.randint(0,len(child))] = np.random.uniform(-1,1)
 
 
-def mutation_singular(children, rate=0.001):
+def mutation_singular(children, rate=0.01):
     """
     Mutate single index (element) in state if mutation probability = TRUE.
     """
@@ -97,7 +101,7 @@ def retainAndKeepBest(population, percent = 0.5):
 
 def population_score(population):
     total_score = 0
-    highest_score = population[0].fitness
+    highest_score = max(population, key=lambda x: x.fitness).fitness
     for child in population:
         total_score += child.fitness
 
@@ -119,7 +123,18 @@ def test_population(population):
             child.fitness += reward
 
 
+xValues = []
+yValues = []
 
+def callexit(signum, frame):
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    ax.clear()
+    ax.plot(xValues, yValues)
+    plt.show()
+
+
+signal.signal(signal.SIGINT, callexit)
 
 if __name__ == "__main__":
     """
@@ -134,14 +149,17 @@ if __name__ == "__main__":
     - WHAT ELSE ?
     """
 
-    population = [ANN(np.random.uniform(-1,1,25)) for _ in range(40)] # Initial population
-    for gennum in range(1000):
+    population = [ANN(np.random.uniform(-1,1,24)) for _ in range(90)] # Initial population
+    for gennum in range(999999):
         test_population(population)
         highest, avg = population_score(population)
         population = retainAndKeepBest(population)
 
+        xValues.append(gennum + 1)
+        yValues.append(avg)
+
         if gennum > 0:
-            print("Gen {}: Average {}, Highest {}".format(gennum, avg, highest))
+            print("Gen {}: Average {}, \t\tHighest {}".format(gennum, avg, highest))
 
 
 

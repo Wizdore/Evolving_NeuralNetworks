@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import signal
 import matplotlib.pyplot as plt
+from sklearn.neural_network import MLPClassifier
 
 env = gym.make('CartPole-v0')
 
@@ -35,8 +36,8 @@ def crossover(parent1, parent2, crossSize=4):
     The two parents are chosen from the top performers in the generation.
     Returns a tuple containing child 1 and child 2 which has mixed values from parent 1 and 2.
     """
-    pivotMin = np.random.randint(0, len(parent1))
-    pivotMax = np.random.randint(pivotMin, len(parent1))
+    pivotMin = np.random.randint(0, len(parent1) - crossSize)
+    pivotMax = pivotMin + crossSize
 
     # Create children.
     child1 = parent1
@@ -57,7 +58,7 @@ def mutate_all(child, rate=0.001):
         if rate >= m[idx]:
             child[idx] = np.random.uniform(-1,1)
 
-def mutation_single(child, rate=0.025):
+def mutation_single(child, rate=0.0025):
     """
     Mutate single index (element) in state if mutation probability = TRUE.
     """

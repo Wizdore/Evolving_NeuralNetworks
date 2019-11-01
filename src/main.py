@@ -14,10 +14,10 @@ class ANN:
         self.activation = activation
 
     def get_output(self, inputs):
-        hl_weight = self.state[0:20].reshape(5,4)       # First 20 elements are weights for input to hidden layer edges
-        hl_bias = self.state[20:24]                     # Next 4 elements are for 4 nodes of hidden layer
-        ol_weight = self.state[24:28].reshape(4,1)      # Next 4 elements are for 4 weights for hidden to output edges 
-        ol_bias = self.state[28:29]                     # Next 1 element is the bias of the output layer
+        hl_weight = self.state[0:16].reshape(4,4)       # First 20 elements are weights for input to hidden layer edges
+        hl_bias = self.state[16:20]                     # Next 4 elements are for 4 nodes of hidden layer
+        ol_weight = self.state[20:24].reshape(4,1)      # Next 4 elements are for 4 weights for hidden to output edges 
+        ol_bias = self.state[-1]                     # Next 1 element is the bias of the output layer
 
         inputs = self.activation(inputs)                # Normalizing the input values
 
@@ -111,14 +111,11 @@ def test_population(population):
         env.reset()
         observation, reward, done, _ = env.step(env.action_space.sample())
         done = False
-        
-        observation = np.concatenate([observation, [0]])
 
         while(not done):
             env.render()
             res = child.get_output(observation)
-            observation, reward, done, _ = env.step(1 if res > 0 else 0)  
-            observation = np.concatenate([observation, res])      
+            observation, reward, done, _ = env.step(1 if res > 0 else 0)        
             child.fitness += reward
 
 
@@ -137,7 +134,7 @@ if __name__ == "__main__":
     - WHAT ELSE ?
     """
 
-    population = [ANN(np.random.uniform(-1,1,29)) for _ in range(40)] # Initial population
+    population = [ANN(np.random.uniform(-1,1,25)) for _ in range(40)] # Initial population
     for gennum in range(1000):
         test_population(population)
         highest, avg = population_score(population)

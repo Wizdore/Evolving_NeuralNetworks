@@ -35,15 +35,28 @@ def crossover(parent1, parent2, crossSize=4):
     The two parents are chosen from the top performers in the generation.
     Returns a tuple containing child 1 and child 2 which has mixed values from parent 1 and 2.
     """
-    pivotMin = np.random.randint(0, len(parent1))
-    pivotMax = np.random.randint(pivotMin, len(parent1))
+
+    parent1_weight = parent1[:20]
+    parent2_weight = parent2[:20]
+    parent1_bias = parent1[20:]
+    parent2_bias = parent2[20:]
+
+
+    pivotMin_weight = np.random.randint(0, len(parent1_weight))
+    pivotMax_weight = np.random.randint(pivotMin_weight, len(parent1_weight))
+
+    pivotMin_bias = np.random.randint(0, len(parent1_bias))
+    pivotMax_bias = np.random.randint(pivotMin_bias, len(parent2_bias))
 
     # Create children.
-    child1 = parent1
-    child2 = parent2
+    child1 = np.hstack((parent1_weight , parent1_bias))
+    child2 = np.hstack((parent2_weight , parent2_bias))
     # Crossover data.
-    child1[pivotMin:pivotMax] = parent2[pivotMin:pivotMax]
-    child2[pivotMin:pivotMax] = parent1[pivotMin:pivotMax]
+    child1[pivotMin_weight:pivotMax_weight] = parent2[pivotMin_weight:pivotMax_weight]
+    child1[pivotMin_bias:pivotMax_bias] = parent2[pivotMin_bias:pivotMax_bias]
+
+    child2[pivotMin_weight:pivotMax_weight] = parent1[pivotMin_weight:pivotMax_weight]
+    child2[pivotMin_bias:pivotMax_bias] = parent1[pivotMin_bias:pivotMax_bias]
     
     return child1, child2
 

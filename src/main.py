@@ -1,8 +1,5 @@
 import gym
-<<<<<<< HEAD
 import ANN
-=======
->>>>>>> d64d4515f6b7879043d53b9dfc6065661e06335f
 import numpy as np
 
 class ANNResult:
@@ -98,19 +95,11 @@ if __name__ == "__main__":
     - WHAT ELSE ?
     """
     with gym.make('CartPole-v0') as env:
-<<<<<<< HEAD
         population = [ANN.ANN(np.random.uniform(-1.0, 1.0, size=29)) for _ in range(50)] # Initial population
         for gen in range(10): # generation
             for network in population:
                 network.render(env) # simulate
 
-=======
-        population = [ANNResult(np.random.uniform(-1,1,29), env.observation_space.sample(), 0) for _ in range(40)] # Initial population
-        for gen in range(15): # generation
-            for ann in population:
-                simulate(env,ann, (gen <= 0))
-            
->>>>>>> d64d4515f6b7879043d53b9dfc6065661e06335f
             population = sorted(population, key=lambda x: x.fitness, reverse=True) # Sort population based on best fitness.
             print("Best score for generation {} is {}.".format(gen+1, population[0].fitness))
             # mutate , GA stuff, make children, modify initial population ? scrap 50% worst entries

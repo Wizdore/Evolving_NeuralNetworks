@@ -51,6 +51,7 @@ def activationFunction(x):
 
 def getOutput(ann):
     state = ann.state
+    print(ann.lastObservation, ann.lastOutput)
     inputs = activationFunction(np.concatenate([ann.lastObservation, [ann.lastOutput]])) # Normalizing the input values
 
     hl_weight = state[0:20].reshape(5,4)       # First 20 elements are weights for input to hidden layer edges
@@ -61,7 +62,8 @@ def getOutput(ann):
     hl_result = (np.matmul(inputs, hl_weight) + hl_bias)        # calc from input to hidden layer (is linear activation good enough?!)
     ol_result = (np.matmul(hl_result, ol_weight) + ol_bias)     # calc from Hidden to output layer
 
-    return ol_result        # returning raw result of the network
+    #return ol_result        # returning raw result of the network
+    return (1 if ol_result >= 0 else 0)
 
 def retainAndKeepBest(population):
     """
@@ -71,14 +73,13 @@ def retainAndKeepBest(population):
     population = sorted(population, key=lambda x: x.fitness, reverse=True) # Sort population based on best fitness.
     print("Best score for generation {} is {}.".format(gen+1, population[0].fitness))
     population = population[:(int(len(population)*0.5))] # keep top 50%
-    print(len(population))
-    for i in range(0, len(population), 2):
+    size = len(population)
+    for i in range(0, size, 2):
         parent1 = population[i]
         parent2 = population[i+1]
         children = crossover(parent1,parent2)
         mutate_all(children)
         population.extend(children)
-    print(len(population))
     return population
 
 def simulate(env, ann, isFirstTime = False):
@@ -90,7 +91,6 @@ def simulate(env, ann, isFirstTime = False):
     while(not done):
         env.render()
         output = (env.action_space.sample() if isFirstTime else getOutput(ann))
-        print(output)
         observation, reward, done, _ = env.step(output)
         ann.lastObservation = observation
         ann.lastOutput = output

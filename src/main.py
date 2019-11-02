@@ -137,7 +137,6 @@ def test_population(population):
     """
     Run a network for some element in the population.
     """
-    prevActions = np.arange(5)  # Store last 5 actions for sanity check suggestion.
     iteration = 0  # Keep track of the number of iterations.
     for child in population:
         ENV.reset()
@@ -146,11 +145,8 @@ def test_population(population):
         while (not done):
             ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
-            if len(set(prevActions)) == 1:  # All actions are the same, use opposite action.
-                action = (1 if prevActions[0] <= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
             child.fitness += reward
-            prevActions[iteration % len(prevActions)] = action
             iteration += 1
 
 

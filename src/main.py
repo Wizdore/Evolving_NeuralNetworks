@@ -167,9 +167,4 @@ if __name__ == "__main__":
 
         print("Gen {}:\t\tAverage {:.3f},\t\tHighest {}".format(gennum+1, avg, highest))
 
-<<<<<<< HEAD
     env.close()
-=======
-    ENV.close()
-    GRAPH.plot()
->>>>>>> 3c9572b63fa641f58965db34e23643505ccb7e8f

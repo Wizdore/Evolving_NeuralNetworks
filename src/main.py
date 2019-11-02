@@ -115,16 +115,22 @@ def test_population(population):
     """
     Run a network for some element in the population.
     """
+    prevActions = np.arange(5) # Store last 5 actions for sanity check suggestion.
+    iteration = 0 # Keep track of the number of iterations.
     for child in population:        
         ENV.reset()
         observation = ENV.observation_space.sample() # random inputs
         done = False
         while(not done):
             ENV.render()
-            res = child.get_output(observation)
-            observation, reward, done, _ = ENV.step(1 if res >= 0 else 0)        
+            action = (1 if child.get_output(observation) >= 0 else 0)
+            if len(set(prevActions)) == 1: # All actions are the same, use opposite action.
+                action = (1 if prevActions[0] <= 0 else 0)
+            observation, reward, done, _ = ENV.step(action)        
             child.fitness += reward
-
+            prevActions[iteration % len(prevActions)] = action
+            iteration += 1
+            
 if __name__ == "__main__":
     """
     Start execution of ANN Evolution here:

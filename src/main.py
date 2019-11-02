@@ -6,13 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 ENV = gym.make('CartPole-v0')
-
+mutation_rate = 0.001
 
 class ANN:
     def __init__(self, state):
         self.state = state  # 24 size vector that holds weights and biases of whole network
-        self.activation = lambda x: (2 / (1 + np.exp(
-            -0.5 * x))) - 1  # Slightly modified tanh Activation Function that should work better in our case
+        self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation Function that should work better in our case
         self.fitness = 0
 
     def set_hl_activation(self, activation):  # Optional function change the activation function
@@ -64,22 +63,35 @@ def crossover(parent1, parent2):
     return child1, child2
 
 
-def mutate_all(state, rate=0.0025):
+def mutate_all(state):
     """
     Go through each element in the state and check if that element should be mutated with
     probability 'rate'.
     """
     m = np.random.uniform(0.0, 1.0, size=len(state))
     for idx, _ in enumerate(state):
-        if rate >= m[idx]:
+        if mutation_rate >= m[idx]:
             state[idx] = np.random.uniform(-1, 1)
 
 
-def mutation_single(state, rate=0.0025):
+def mutate_all_slightly(state, max_mutation_amount=0.25):
+    """
+    Go through each element in the state and check if that element should be mutated with
+    probability 'rate'.
+    """
+    m = np.random.uniform(0.0, 1.0, size=len(state))
+    for idx, _ in enumerate(state):
+        if mutation_rate >= m[idx]:
+            mutval = state[idx] + np.random.uniform(-max_mutation_amount, max_mutation_amount)
+            mutval = np.tanh(mutval)
+            state[idx] = mutval
+
+
+def mutation_single(state):
     """
     Mutate single index (element) in state if mutation probability = TRUE.
     """
-    if rate >= np.random.uniform(0, 1):
+    if mutation_rate >= np.random.uniform(0, 1):
         state[np.random.randint(0, len(state))] = np.random.uniform(-1, 1)
 
 
@@ -98,8 +110,9 @@ def retainAndKeepBest(population, percent=0.5):
         parent1_dna = population[i].state
         parent2_dna = population[i + 1].state
         child1_dna, child2_dna = crossover(parent1_dna, parent2_dna)
-        mutation_single(child1_dna)
-        mutation_single(child2_dna)
+
+        mutate_all_slightly(child1_dna)
+        mutate_all_slightly(child2_dna)
 
         child1 = ANN(child1_dna)
         child2 = ANN(child2_dna)
@@ -111,10 +124,11 @@ def retainAndKeepBest(population, percent=0.5):
 def population_score(population):
     total_score = 0
     best_agent = max(population, key=lambda x: x.fitness)
+    worst_agent = min(population, key=lambda x: x.fitness)
     for child in population:
         total_score += child.fitness
 
-    return best_agent, (total_score / len(population))
+    return best_agent, worst_agent, (total_score / len(population))
 
 
 def test_population(population):
@@ -126,7 +140,7 @@ def test_population(population):
         observation = ENV.reset()  # random inputs
         done = False
         while not done:
-            ENV.render()
+            #ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
             child.fitness += reward
@@ -153,20 +167,18 @@ def animate(i):
     plt.tight_layout()
 
 
-def test_agent(agent, env_name):
+def test_agent(agent):
     """
     Run a single agent in a different environment.
     """
-    print('Testing the best agent of this generation, (fitness: {})'.format(agent.fitness))
-    test_env = gym.make(env_name)
-    observation = test_env.reset()
+    print('Showing agent with fitness: {}'.format(agent.fitness))
+    observation = ENV.reset()
     done = False
     while not done:
-        test_env.render()
+        ENV.render()
         action = (1 if agent.get_output(observation) >= 0 else 0)
-        observation, reward, done, _ = test_env.step(action)
-    time.sleep(0.2)
-    test_env.close()
+        observation, reward, done, _ = ENV.step(action)
+    time.sleep(0.4)
     return
 
 
@@ -185,18 +197,24 @@ def evolve(n_generations, initialpop_size):
     population = [ANN(np.random.uniform(-1, 1, 24)) for _ in range(initialpop_size)]  # Initial population
     for gennum in range(n_generations):
         test_population(population)
-        best_agent, avg = population_score(population)
+        best_agent, worst_agent, avg = population_score(population)
         gens.append(gennum + 1)
         avg_scores.append(avg)
         best_agents.append(best_agent)
         best_scores.append(best_agent.fitness)
-        print("Gen {}:\tAverage {:.3f},\tHighest {}".format(gennum + 1, avg, best_agent.fitness))
+        print("Gen {}: Lowest {}\tAverage {:.3f},\tHighest {}".
+              format(gennum + 1, worst_agent.fitness, avg, best_agent.fitness))
+        test_agent(best_agent)
 
         population = retainAndKeepBest(population)
 
 
 if __name__ == "__main__":
-    evolution_thread = threading.Thread(target=evolve, args=(20, 60))
+    generations_to_run = 50
+    initial_population_size = 40
+    mutation_rate = 0.001
+
+    evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
     evolution_thread.start()
 
     ani = FuncAnimation(plt.gcf(), animate, interval=500)
@@ -205,3 +223,4 @@ if __name__ == "__main__":
 
     evolution_thread.join()
     ENV.close()
+    exit()

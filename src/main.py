@@ -116,7 +116,8 @@ def test_population(population):
     Run a network for some element in the population.
     """
     for child in population:        
-        observation = ENV.reset()
+        ENV.reset()
+        observation = ENV.observation_space.sample() # random inputs
         done = False
         while(not done):
             ENV.render()

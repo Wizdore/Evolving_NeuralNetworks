@@ -50,12 +50,10 @@ def crossover(parent1, parent2, crossSize=4):
     The two parents are chosen from the top performers in the generation.
     Returns a tuple containing child 1 and child 2 which has mixed values from parent 1 and 2.
     """
-
-    parent1_weight = parent1[:20]
-    parent2_weight = parent2[:20]
-    parent1_bias = parent1[20:]
-    parent2_bias = parent2[20:]
-
+    parent1_weight = parent1[:16]
+    parent2_weight = parent2[:16]
+    parent1_bias = parent1[16:]
+    parent2_bias = parent2[16:]
 
     pivotMin_weight = np.random.randint(0, len(parent1_weight))
     pivotMax_weight = np.random.randint(pivotMin_weight, len(parent1_weight))
@@ -167,9 +165,5 @@ if __name__ == "__main__":
 
         print("Gen {}:\t\tAverage {:.3f},\t\tHighest {}".format(gennum+1, avg, highest))
 
-<<<<<<< HEAD
-    env.close()
-=======
     ENV.close()
     GRAPH.plot()
->>>>>>> 3c9572b63fa641f58965db34e23643505ccb7e8f

@@ -1,10 +1,26 @@
 import gym
 import numpy as np
-import signal
 import matplotlib.pyplot as plt
 
-env = gym.make('CartPole-v0')
+ENV = gym.make('CartPole-v0')
 
+class ResultGraph:
+    """
+    Shows a graph at the end of execution depicting how the generations have evolved.
+    """
+
+    def __init__(self):
+        self.x = []
+        self.y = []
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(1,1,1)
+
+    def plot(self):
+        self.ax.clear()
+        self.ax.plot(self.x, self.y)
+        plt.show()
+
+GRAPH = ResultGraph()
 
 class ANN:
     def __init__(self, state):
@@ -27,7 +43,6 @@ class ANN:
         ol_result = (np.matmul(hl_result, ol_weight))     # calc from Hidden to output layer
 
         return ol_result        # returning raw result of the network
-
 
 def crossover(parent1, parent2, crossSize=4):
     """
@@ -60,33 +75,24 @@ def crossover(parent1, parent2, crossSize=4):
     
     return child1, child2
 
-def mutate_all(child, rate=0.001):
+def mutate_all(state, rate=0.0025):
     """
     Go through each element in the state and check if that element should be mutated with
     probability 'rate'.
     """
-    m = np.random.uniform(0.0,1.0,size=len(child))
-    for idx, _ in enumerate(child):
+    m = np.random.uniform(0.0,1.0,size=len(state))
+    for idx, _ in enumerate(state):
         if rate >= m[idx]:
-            child[idx] = np.random.uniform(-1,1)
+            state[idx] = np.random.uniform(-1,1)
 
-def mutation_single(child, rate=0.025):
+def mutation_single(state, rate=0.0025):
     """
     Mutate single index (element) in state if mutation probability = TRUE.
     """
     if rate >= np.random.uniform(0,1):
-        child[np.random.randint(0,len(child))] = np.random.uniform(-1,1)
+        state[np.random.randint(0,len(state))] = np.random.uniform(-1,1)
 
-
-def mutation_singular(children, rate=0.01):
-    """
-    Mutate single index (element) in state if mutation probability = TRUE.
-    """
-    for child in children:
-        if rate >= np.random.uniform(0,1):
-            child[np.random.randint(0,len(child))] = np.random.uniform(-1,1)
-
-def retainAndKeepBest(population, percent = 0.5):
+def retainAndKeepBest(population, percent=0.5):
     """
     Removes bad performers, crossovers and mutates best performers.
     Returns new population for the next gen.
@@ -107,10 +113,8 @@ def retainAndKeepBest(population, percent = 0.5):
         child1 = ANN(child1_dna)
         child2 = ANN(child2_dna)
         
-        population.append(child1)
-        population.append(child2)
+        population.extend([child1, child2])
     return population
-
 
 def population_score(population):
     total_score = 0
@@ -118,37 +122,28 @@ def population_score(population):
     for child in population:
         total_score += child.fitness
 
-    return highest_score, total_score/len(population)
+    return highest_score, (total_score/len(population))
 
 def test_population(population):
     """
     Run a network for some element in the population.
     """
-    for child in population:
-        env.reset()
-        observation, reward, done, _ = env.step(env.action_space.sample())
+    prevActions = np.arange(5) # Store last 5 actions for sanity check suggestion.
+    iteration = 0 # Keep track of the number of iterations.
+    for child in population:        
+        ENV.reset()
+        observation = ENV.observation_space.sample() # random inputs
         done = False
-
         while(not done):
-            env.render()
-            res = child.get_output(observation)
-            observation, reward, done, _ = env.step(1 if res > 0 else 0)        
+            ENV.render()
+            action = (1 if child.get_output(observation) >= 0 else 0)
+            if len(set(prevActions)) == 1: # All actions are the same, use opposite action.
+                action = (1 if prevActions[0] <= 0 else 0)
+            observation, reward, done, _ = ENV.step(action)        
             child.fitness += reward
-
-
-xValues = []
-yValues = []
-
-def callexit(signum, frame):
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1)
-    ax.clear()
-    ax.plot(xValues, yValues)
-    plt.show()
-
-
-signal.signal(signal.SIGINT, callexit)
-
+            prevActions[iteration % len(prevActions)] = action
+            iteration += 1
+            
 if __name__ == "__main__":
     """
     Start execution of ANN Evolution here:
@@ -161,20 +156,20 @@ if __name__ == "__main__":
     - Use the data to generate some data frame for use in excel (save as .csv)
     - WHAT ELSE ?
     """
-
-    population = [ANN(np.random.uniform(-1,1,24)) for _ in range(90)] # Initial population
-    for gennum in range(999999):
+    population = [ANN(np.random.uniform(-1,1,24)) for _ in range(60)] # Initial population
+    for gennum in range(15):
         test_population(population)
         highest, avg = population_score(population)
         population = retainAndKeepBest(population)
 
-        xValues.append(gennum + 1)
-        yValues.append(avg)
+        GRAPH.x.append(gennum+1)
+        GRAPH.y.append(avg)
 
-        if gennum > 0:
-            print("Gen {}: Average {}, \t\tHighest {}".format(gennum, avg, highest))
+        print("Gen {}:\t\tAverage {:.3f},\t\tHighest {}".format(gennum+1, avg, highest))
 
-
-
-
+<<<<<<< HEAD
     env.close()
+=======
+    ENV.close()
+    GRAPH.plot()
+>>>>>>> 3c9572b63fa641f58965db34e23643505ccb7e8f

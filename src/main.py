@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 ENV = gym.make('CartPole-v0')
-mutation_rate = 0.0025
+mutation_rate = 0.005
 
 
 class ANN:
@@ -76,7 +76,7 @@ def mutate_all(state):
             state[idx] = np.random.uniform(-1, 1)
 
 
-def mutate_all_slightly(state, max_mutation_amount=0.25):
+def mutate_all_slightly(state, max_mutation_amount=0.5):
     """
     Go through each element in the state and check if that element should be mutated with
     probability 'rate'.
@@ -162,7 +162,7 @@ def record_population_score(population, gen_number):
     worst_scores.append(population[-1].fitness)
 
     print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
-    test_agent(population[int(len(population) / 2)])  ## Rendering an Agent
+    test_agent(population[0])  ## Rendering the best Agent
 
 
 def animate(i):
@@ -213,8 +213,8 @@ def evolve(n_generations, initialpop_size):
 
 if __name__ == "__main__":
     generations_to_run = 50
-    initial_population_size = 40
-    mutation_rate = 0.0025
+    initial_population_size = 48
+    mutation_rate = 0.005
 
     evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
     evolution_thread.start()
@@ -222,7 +222,6 @@ if __name__ == "__main__":
     ani = FuncAnimation(plt.gcf(), animate, interval=500)
     plt.tight_layout()
     plt.show()
-
     ENV.close()
     evolution_thread.join()
     exit()

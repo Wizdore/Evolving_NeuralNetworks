@@ -6,12 +6,14 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 ENV = gym.make('CartPole-v0')
-mutation_rate = 0.001
+mutation_rate = 0.0025
+
 
 class ANN:
     def __init__(self, state):
         self.state = state  # 24 size vector that holds weights and biases of whole network
-        self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation Function that should work better in our case
+        self.activation = lambda x: (2 / (1 + np.exp(
+            -0.5 * x))) - 1  # Slightly modified tanh Activation Function that should work better in our case
         self.fitness = 0
 
     def set_hl_activation(self, activation):  # Optional function change the activation function
@@ -121,16 +123,6 @@ def retainAndKeepBest(population, percent=0.5):
     return population
 
 
-def population_score(population):
-    total_score = 0
-    best_agent = max(population, key=lambda x: x.fitness)
-    worst_agent = min(population, key=lambda x: x.fitness)
-    for child in population:
-        total_score += child.fitness
-
-    return best_agent, worst_agent, (total_score / len(population))
-
-
 def test_population(population):
     """
     Run a network for some element in the population.
@@ -140,29 +132,47 @@ def test_population(population):
         observation = ENV.reset()  # random inputs
         done = False
         while not done:
-            #ENV.render()
+            # ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
             child.fitness += reward
             iteration += 1
 
 
-gens = [0]
-avg_scores = [0.0]
-best_scores = [0]
+gens = []
+worst_scores = []
+median_scores = []
+best_scores = []
+
 best_agents = []
+median_agents = []
+worst_agents = []
+
+
+def record_population_score(population, gen_number):
+    #  TODO: We can store these in pandas dataframe too
+    population = sorted(population, key=lambda x: x.fitness, reverse=True)
+    gens.append(gen_number)
+    best_agents.append(population[0])
+    median_agents.append(population[int(len(population) / 2)])
+    worst_agents.append(population[-1])
+
+    best_scores.append(population[0].fitness)
+    median_scores.append(population[int(len(population) / 2)].fitness)
+    worst_scores.append(population[-1].fitness)
+
+    print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
+    test_agent(population[int(len(population) / 2)])  ## Rendering an Agent
 
 
 def animate(i):
-    x = gens
-    y1 = avg_scores
-    y2 = best_scores
-
     plt.cla()
-
-    plt.plot(x, y1, label='Average')
-    plt.plot(x, y2, label='Highest')
-
+    plt.plot(gens, worst_scores, label='Worst')
+    plt.plot(gens, median_scores, label='Median')
+    plt.plot(gens, best_scores, label='Best')
+    plt.xlabel("Generations")
+    plt.ylabel("Fitness score")
+    plt.title("Scores of Worst/Median/Best agent over generations")
     plt.legend(loc='upper left')
     plt.tight_layout()
 
@@ -178,7 +188,7 @@ def test_agent(agent):
         ENV.render()
         action = (1 if agent.get_output(observation) >= 0 else 0)
         observation, reward, done, _ = ENV.step(action)
-    time.sleep(0.4)
+    time.sleep(0.2)
     return
 
 
@@ -197,22 +207,14 @@ def evolve(n_generations, initialpop_size):
     population = [ANN(np.random.uniform(-1, 1, 24)) for _ in range(initialpop_size)]  # Initial population
     for gennum in range(n_generations):
         test_population(population)
-        best_agent, worst_agent, avg = population_score(population)
-        gens.append(gennum + 1)
-        avg_scores.append(avg)
-        best_agents.append(best_agent)
-        best_scores.append(best_agent.fitness)
-        print("Gen {}: Lowest {}\tAverage {:.3f},\tHighest {}".
-              format(gennum + 1, worst_agent.fitness, avg, best_agent.fitness))
-        test_agent(best_agent)
-
+        record_population_score(population, gennum + 1)
         population = retainAndKeepBest(population)
 
 
 if __name__ == "__main__":
     generations_to_run = 50
     initial_population_size = 40
-    mutation_rate = 0.001
+    mutation_rate = 0.0025
 
     evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
     evolution_thread.start()
@@ -221,6 +223,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.show()
 
-    evolution_thread.join()
     ENV.close()
+    evolution_thread.join()
     exit()

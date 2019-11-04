@@ -8,12 +8,12 @@ from matplotlib.animation import FuncAnimation
 ENV = gym.make('CartPole-v0')
 mutation_rate = 0.005
 
+ENV._max_episode_steps = 5000
 
 class ANN:
     def __init__(self, state):
         self.state = state  # 24 size vector that holds weights and biases of whole network
-        self.activation = lambda x: (2 / (1 + np.exp(
-            -0.5 * x))) - 1  # Slightly modified tanh Activation Function that should work better in our case
+        self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation
         self.fitness = 0
 
     def set_hl_activation(self, activation):  # Optional function change the activation function
@@ -127,7 +127,6 @@ def test_population(population):
     """
     Run a network for some element in the population.
     """
-    iteration = 0  # Keep track of the number of iterations.
     for child in population:
         observation = ENV.reset()  # random inputs
         done = False
@@ -135,8 +134,7 @@ def test_population(population):
             # ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
-            child.fitness += reward
-            iteration += 1
+            child.fitness += (reward - ((2 / (1 + np.exp(-0.5 * abs(observation[1])))) - 1)/2) 
 
 
 gens = []
@@ -162,7 +160,7 @@ def record_population_score(population, gen_number):
     worst_scores.append(population[-1].fitness)
 
     print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
-    test_agent(population[0])  ## Rendering the best Agent
+    #test_agent(population[0])  ## Rendering the best Agent
 
 
 def animate(i):
@@ -212,8 +210,8 @@ def evolve(n_generations, initialpop_size):
 
 
 if __name__ == "__main__":
-    generations_to_run = 50
-    initial_population_size = 48
+    generations_to_run = 30
+    initial_population_size = 56
     mutation_rate = 0.005
 
     evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
@@ -223,5 +221,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.show()
     ENV.close()
+    print(best_agents[-1].state)
     evolution_thread.join()
     exit()

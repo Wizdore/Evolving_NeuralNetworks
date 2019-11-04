@@ -8,7 +8,6 @@ from matplotlib.animation import FuncAnimation
 ENV = gym.make('CartPole-v0')
 mutation_rate = 0.005
 
-ENV._max_episode_steps = 5000
 
 class ANN:
     def __init__(self, state):
@@ -134,7 +133,7 @@ def test_population(population):
             # ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
-            child.fitness += (reward - ((2 / (1 + np.exp(-0.5 * abs(observation[1])))) - 1)/2) 
+            child.fitness += (reward + ((2 / (1 + np.exp(-0.1 * abs(observation[1])))) - 1)/2) 
 
 
 gens = []
@@ -160,7 +159,7 @@ def record_population_score(population, gen_number):
     worst_scores.append(population[-1].fitness)
 
     print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
-    #test_agent(population[0])  ## Rendering the best Agent
+    test_agent(population[0])  ## Rendering the best Agent
 
 
 def animate(i):
@@ -210,8 +209,8 @@ def evolve(n_generations, initialpop_size):
 
 
 if __name__ == "__main__":
-    generations_to_run = 30
-    initial_population_size = 56
+    generations_to_run = 50
+    initial_population_size = 60
     mutation_rate = 0.005
 
     evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
@@ -221,6 +220,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.show()
     ENV.close()
-    print(best_agents[-1].state)
     evolution_thread.join()
+    print(best_agents[-1].state)
     exit()

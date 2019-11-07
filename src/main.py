@@ -33,6 +33,24 @@ class ANN:
         return ol_result  # returning raw result of the network
 
 
+def crossover2(parent1, parent2):
+    child1 = np.copy(parent1)
+    child2 = np.copy(parent2)
+
+    m = np.random.uniform(0.0, 1.0, size=len(parent1))
+    for idx, _ in enumerate(parent1):
+        if m[idx] > 0.5:
+            child1[idx] = parent2[idx]
+            child2[idx] = parent1[idx]
+        else:
+            child1[idx] = parent1[idx]
+            child2[idx] = parent2[idx]
+
+    return child1, child2
+
+
+
+
 def crossover(parent1, parent2):
     """
     Parent1 and Parent2 are 2 states from 2 networks.
@@ -110,7 +128,7 @@ def retainAndKeepBest(population, percent=0.5):
         population[i + 1].fitness = 0
         parent1_dna = population[i].state
         parent2_dna = population[i + 1].state
-        child1_dna, child2_dna = crossover(parent1_dna, parent2_dna)
+        child1_dna, child2_dna = crossover2(parent1_dna, parent2_dna)
 
         mutate_all_slightly(child1_dna)
         mutate_all_slightly(child2_dna)
@@ -133,7 +151,7 @@ def test_population(population):
             # ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
-            child.fitness += (reward + ((2 / (1 + np.exp(-0.1 * abs(observation[1])))) - 1)/2) 
+            child.fitness += reward #(reward + ((2 / (1 + np.exp(-0.1 * abs(observation[1])))) - 1)/2) 
 
 
 gens = []
@@ -159,7 +177,7 @@ def record_population_score(population, gen_number):
     worst_scores.append(population[-1].fitness)
 
     print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
-    test_agent(population[0])  ## Rendering the best Agent
+    #test_agent(population[0])  ## Rendering the best Agent
 
 
 def animate(i):

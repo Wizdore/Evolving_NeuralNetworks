@@ -10,6 +10,10 @@ mutation_rate = 0.005
 
 
 class ANN:
+    '''
+    Represents an Artificial Neural Network Class holding the instructions to evolve by crossover genetic algorithm
+    in the manipulation for the carpole balancing problem
+    '''
     def __init__(self, state):
         self.state = state  # 24 size vector that holds weights and biases of whole network
         self.activation = lambda x: (2 / (1 + np.exp(
@@ -150,7 +154,6 @@ worst_agents = []
 
 
 def record_population_score(population, gen_number):
-    #  TODO: We can store these in pandas dataframe too
     population = sorted(population, key=lambda x: x.fitness, reverse=True)
     gens.append(gen_number)
     best_agents.append(population[0])

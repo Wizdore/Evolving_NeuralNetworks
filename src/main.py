@@ -8,10 +8,13 @@ from matplotlib.animation import FuncAnimation
 ENV = gym.make('CartPole-v0')
 mutation_rate = 0.005
 
-
 class ANN:
+    """
+    Our unique neural network for this particular problem.
+    Consists of 25 states. These states are randomly chosen at first, each value in the states are values between [0,1].
+    """
     def __init__(self, state):
-        self.state = state  # 24 size vector that holds weights and biases of whole network
+        self.state = state  # 25 size vector that holds weights and biases of whole network
         self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation
         self.fitness = 0
 
@@ -19,6 +22,11 @@ class ANN:
         self.activation = activation
 
     def get_output(self, inputs):
+        """
+        Returns the actual output,
+        an activation function can be used at a later point to return the action, 
+        which can take the value 0 or 1.
+        """
         hl_weight = self.state[0:16].reshape(4, 4)  # First 20 elements are weights for input to hidden layer edges
         hl_bias = self.state[16:20]  # Next 4 elements are for 4 nodes of hidden layer
         ol_weight = self.state[20:24].reshape(4, 1)  # Next 4 elements are for 4 weights for hidden to output edges
@@ -32,14 +40,12 @@ class ANN:
 
         return ol_result  # returning raw result of the network
 
-
 def crossover(parent1, parent2):
     """
     Parent1 and Parent2 are 2 states from 2 networks.
     The two parents are chosen from the top performers in the generation.
     Returns a tuple containing child 1 and child 2 which has mixed values from parent 1 and 2.
     """
-
     parent1_weight = parent1[:20]
     parent2_weight = parent2[:20]
     parent1_bias = parent1[20:]
@@ -54,6 +60,7 @@ def crossover(parent1, parent2):
     # Create children.
     child1 = np.hstack((parent1_weight, parent1_bias))
     child2 = np.hstack((parent2_weight, parent2_bias))
+    
     # Crossover data.
     child1[pivotMin_weight:pivotMax_weight] = parent2[pivotMin_weight:pivotMax_weight]
     child1[pivotMin_bias:pivotMax_bias] = parent2[pivotMin_bias:pivotMax_bias]
@@ -63,48 +70,24 @@ def crossover(parent1, parent2):
 
     return child1, child2
 
-
-def mutate_all(state):
-    """
-    Go through each element in the state and check if that element should be mutated with
-    probability 'rate'.
-    """
-    m = np.random.uniform(0.0, 1.0, size=len(state))
-    for idx, _ in enumerate(state):
-        if mutation_rate >= m[idx]:
-            state[idx] = np.random.uniform(-1, 1)
-
-
 def mutate_all_slightly(state, max_mutation_amount=0.5):
     """
     Go through each element in the state and check if that element should be mutated with
-    probability 'rate'.
+    probability X, if a random uniform value between [0,1] is less or equal to this X, mutate that element.
     """
     m = np.random.uniform(0.0, 1.0, size=len(state))
     for idx, _ in enumerate(state):
         if mutation_rate >= m[idx]:
-            mutval = state[idx] + np.random.uniform(-max_mutation_amount, max_mutation_amount)
-            mutval = np.tanh(mutval)
-            state[idx] = mutval
-
-
-def mutation_single(state):
-    """
-    Mutate single index (element) in state if mutation probability = TRUE.
-    """
-    if mutation_rate >= np.random.uniform(0, 1):
-        state[np.random.randint(0, len(state))] = np.random.uniform(-1, 1)
-
+            state[idx] = np.tanh(state[idx] + np.random.uniform(-max_mutation_amount, max_mutation_amount))
 
 def retainAndKeepBest(population, percent=0.5):
     """
-    Removes bad performers, crossovers and mutates best performers.
-    Returns new population for the next gen.
+    Removes bad performers, then does a crossover and potentially mutates some of the new children.
+    Returns new population for the next generation.
     """
     population = sorted(population, key=lambda x: x.fitness, reverse=True)  # Sort population based on best fitness.
     population = population[:(int(len(population) * percent))]  # keep top 50%
     size = len(population)
-
     for i in range(0, size, 2):
         population[i].fitness = 0
         population[i + 1].fitness = 0
@@ -121,20 +104,18 @@ def retainAndKeepBest(population, percent=0.5):
         population.extend([child1, child2])
     return population
 
-
 def test_population(population):
     """
-    Run a network for some element in the population.
+    Test every element in the population, record the fitnes for every element.
+    Predict the action (output) based on previous observations.
     """
     for child in population:
-        observation = ENV.reset()  # random inputs
+        observation = ENV.reset()
         done = False
         while not done:
-            # ENV.render()
             action = (1 if child.get_output(observation) >= 0 else 0)
             observation, reward, done, _ = ENV.step(action)
             child.fitness += (reward + ((2 / (1 + np.exp(-0.1 * abs(observation[1])))) - 1)/2) 
-
 
 gens = []
 worst_scores = []
@@ -145,9 +126,10 @@ best_agents = []
 median_agents = []
 worst_agents = []
 
-
 def record_population_score(population, gen_number):
-    #  TODO: We can store these in pandas dataframe too
+    """
+    Retrieve the highest, median and worst fitness from the population of generation X.
+    """
     population = sorted(population, key=lambda x: x.fitness, reverse=True)
     gens.append(gen_number)
     best_agents.append(population[0])
@@ -159,10 +141,12 @@ def record_population_score(population, gen_number):
     worst_scores.append(population[-1].fitness)
 
     print(f"Gen {gen_number}: Worst {worst_scores[-1]}\tMedian {median_scores[-1]},\tBest {best_scores[-1]}")
-    test_agent(population[0])  ## Rendering the best Agent
-
+    test_agent(population[0])  # Rendering the best Agent
 
 def animate(i):
+    """
+    Animates a live graph, graph is updated at a given interval.
+    """
     plt.cla()
     plt.plot(gens, worst_scores, label='Worst')
     plt.plot(gens, median_scores, label='Median')
@@ -172,7 +156,6 @@ def animate(i):
     plt.title("Scores of Worst/Median/Best agent over generations")
     plt.legend(loc='upper left')
     plt.tight_layout()
-
 
 def test_agent(agent):
     """
@@ -184,31 +167,27 @@ def test_agent(agent):
     while not done:
         ENV.render()
         action = (1 if agent.get_output(observation) >= 0 else 0)
-        observation, reward, done, _ = ENV.step(action)
+        observation, _, done, _ = ENV.step(action)
     time.sleep(0.2)
     return
 
-
 def evolve(n_generations, initialpop_size):
     """
-        Start execution of ANN Evolution here:
-        - Create environment
-        - Create an initial population
-        - Run through X generations
-        - For each generation run through Y population
-        - For each population calculate fitness and rank the population for generation Z based on high-low fitness
-        - Also keep track of the average score for each generation
-        - Use the data to generate some data frame for use in excel (save as .csv)
-        - WHAT ELSE ?
-        """
+    Evolves a population of X neural networks over a given number of generations.
+    For each new generation, the 50% best performers are kept and new children are bred from these parents.
+    The worst, best and avg scores are shown after each generation.
+    """
     population = [ANN(np.random.uniform(-1, 1, 24)) for _ in range(initialpop_size)]  # Initial population
     for gennum in range(n_generations):
         test_population(population)
         record_population_score(population, gennum + 1)
         population = retainAndKeepBest(population)
 
-
 if __name__ == "__main__":
+    """
+    Executes the ANN-evolution algorithm with the given parameters on its on thread.
+    The main thread launches a live plot which will visualize the performance for each generation.
+    """
     generations_to_run = 50
     initial_population_size = 60
     mutation_rate = 0.005
@@ -216,7 +195,7 @@ if __name__ == "__main__":
     evolution_thread = threading.Thread(target=evolve, args=(generations_to_run, initial_population_size))
     evolution_thread.start()
 
-    ani = FuncAnimation(plt.gcf(), animate, interval=500)
+    graphAnimation = FuncAnimation(plt.gcf(), animate, interval=500)
     plt.tight_layout()
     plt.show()
     ENV.close()

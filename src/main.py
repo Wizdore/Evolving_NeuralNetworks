@@ -19,18 +19,19 @@ class ANN:
         self.activation = activation
 
     def get_output(self, inputs):
-        hl_weight = self.state[0:16].reshape(4, 4)  # First 20 elements are weights for input to hidden layer edges
-        hl_bias = self.state[16:20]  # Next 4 elements are for 4 nodes of hidden layer
-        ol_weight = self.state[20:24].reshape(4, 1)  # Next 4 elements are for 4 weights for hidden to output edges
-        # ol_bias = self.state[-1]                     # Next 1 element is the bias of the output layer
+        hl_weight = self.state[0:16].reshape(4, 4)      # First 16 elements are weights for input to hidden layer edges
+        hl_bias = self.state[16:20]                     # Next 4 elements are biases for 4 nodes of hidden layer
+        ol_weight = self.state[20:24].reshape(4, 1)     # Next 4 elements are for 4 weights for hidden to output edges
+        ol_bias = self.state[-1]                        # Next 1 element is the bias of the output layer
 
         inputs = self.activation(inputs)  # Normalizing the input values
 
         hl_result = (np.matmul(inputs,
                                hl_weight) + hl_bias)  # calc from input to hidden layer (is linear activation good enough?!)
-        ol_result = (np.matmul(hl_result, ol_weight))  # calc from Hidden to output layer
+        ol_result = (np.matmul(hl_result, ol_weight)+ol_bias)  # calc from Hidden to output layer
 
-        return ol_result  # returning raw result of the network
+        
+        return (1 if  ol_result>= 0 else 0)   # returning result of the network after binary step activation
 
 
 def crossover2(parent1, parent2):
@@ -149,7 +150,7 @@ def test_population(population):
         done = False
         while not done:
             # ENV.render()
-            action = (1 if child.get_output(observation) >= 0 else 0)
+            action = child.get_output(observation) 
             observation, reward, done, _ = ENV.step(action)
             child.fitness += reward #(reward + ((2 / (1 + np.exp(-0.1 * abs(observation[1])))) - 1)/2) 
 
@@ -201,7 +202,7 @@ def test_agent(agent):
     done = False
     while not done:
         ENV.render()
-        action = (1 if agent.get_output(observation) >= 0 else 0)
+        action = agent.get_output(observation)
         observation, reward, done, _ = ENV.step(action)
     time.sleep(0.2)
     return
@@ -219,7 +220,7 @@ def evolve(n_generations, initialpop_size):
         - Use the data to generate some data frame for use in excel (save as .csv)
         - WHAT ELSE ?
         """
-    population = [ANN(np.random.uniform(-1, 1, 24)) for _ in range(initialpop_size)]  # Initial population
+    population = [ANN(np.random.uniform(-1, 1, 25)) for _ in range(initialpop_size)]  # Initial population
     for gennum in range(n_generations):
         test_population(population)
         record_population_score(population, gennum + 1)

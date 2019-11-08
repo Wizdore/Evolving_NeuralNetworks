@@ -10,6 +10,10 @@ mutation_rate = 0.005
 
 
 class ANN:
+    '''
+    Represents an Artificial Neural Network Class holding the instructions to evolve by crossover genetic algorithm
+    in the manipulation for the carpole balancing problem
+    '''
     def __init__(self, state):
         self.state = state  # 24 size vector that holds weights and biases of whole network
         self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation

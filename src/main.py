@@ -31,13 +31,9 @@ class ANN:
         hl_bias = self.state[16:20]  # Next 4 elements are for 4 nodes of hidden layer
         ol_weight = self.state[20:24].reshape(4, 1)  # Next 4 elements are for 4 weights for hidden to output edges
         # ol_bias = self.state[-1]                     # Next 1 element is the bias of the output layer
-
         inputs = self.activation(inputs)  # Normalizing the input values
-
         hl_result = (np.matmul(inputs,
-                               hl_weight) + hl_bias)  # calc from input to hidden layer (is linear activation good enough?!)
         ol_result = (np.matmul(hl_result, ol_weight))  # calc from Hidden to output layer
-
         return ol_result  # returning raw result of the network
 
 def crossover(parent1, parent2):

@@ -162,6 +162,9 @@ def test_agent(agent, delay=False):
     time.sleep(0.2)
 
 def visualize_results():
+    """
+    Render the final results with delay.
+    """
     print("\nRender Final Agent(s)\n")
     print("Best Agent")
     test_agent(best_agents[-1], True) # Best agent

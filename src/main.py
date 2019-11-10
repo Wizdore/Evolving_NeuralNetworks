@@ -15,7 +15,7 @@ class ANN:
     """
     def __init__(self, state):
         self.state = state  # 25 size vector that holds weights and biases of whole network
-        self.activation = lambda x: (2 / (1 + np.exp(-0.5 * x))) - 1  # Slightly modified tanh Activation
+        self.activation = lambda x: ((2 / (1 + np.exp(-0.5 * x))) - 1)  # Slightly modified tanh Activation
         self.fitness = 0
 
     def set_hl_activation(self, activation):  # Optional function change the activation function
@@ -35,7 +35,7 @@ class ANN:
         inputs = self.activation(inputs)  # Normalizing the input values
 
         hl_result = (np.matmul(inputs,
-                               hl_weight) + hl_bias)  # calc from input to hidden layer (is linear activation good enough?!)
+                               hl_weight) + hl_bias)  # calc from input to hidden layer
         ol_result = (np.matmul(hl_result, ol_weight)+ol_bias)  # calc from Hidden to output layer
         
         return (1 if  ol_result>= 0 else 0)   # returning result of the network after binary step activation
@@ -68,9 +68,7 @@ def mutate_all_slightly(state, max_mutation_amount=0.5):
     m = np.random.uniform(0.0, 1.0, size=len(state))
     for idx, _ in enumerate(state):
         if mutation_rate >= m[idx]:
-            mutval = state[idx] + np.random.uniform(-max_mutation_amount, max_mutation_amount)
-            mutval = np.tanh(mutval)
-            state[idx] = mutval
+            state[idx] = np.tanh((state[idx] + np.random.uniform(-max_mutation_amount, max_mutation_amount)))
 
 def retainAndKeepBest(population, percent=0.5):
     """
@@ -105,8 +103,7 @@ def test_population(population):
         observation = ENV.reset()
         done = False
         while not done:
-            action = child.get_output(observation)
-            observation, reward, done, _ = ENV.step(action)
+            observation, reward, done, _ = ENV.step(child.get_output(observation))
             child.fitness += reward
 
 gens = []
@@ -149,18 +146,27 @@ def animate(i):
     plt.legend(loc='upper left')
     plt.tight_layout()
 
-def test_agent(agent):
+def test_agent(agent, delay=False):
     """
     Run a single agent in a different environment.
     """
-    print('Showing agent with fitness: {}'.format(agent.fitness))
+    if not delay:
+        print('Showing agent with fitness: {}'.format(agent.fitness))
     observation = ENV.reset()
     done = False
     while not done:
         ENV.render()
-        action = agent.get_output(observation)
-        observation, _, done, _ = ENV.step(action)
+        observation, _, done, _ = ENV.step(agent.get_output(observation))
+        if delay:
+            time.sleep(0.05)
     time.sleep(0.2)
+
+def visualize_results():
+    print("\nRender Final Agent(s)\n")
+    print("Best Agent")
+    test_agent(best_agents[-1], True) # Best agent
+    print("Median Agent")
+    test_agent(median_agents[int(len(median_agents) / 2)], True) # Median of median agent
 
 def evolve(n_generations, initialpop_size):
     """
@@ -174,6 +180,7 @@ def evolve(n_generations, initialpop_size):
         test_population(population)
         record_population_score(population, gennum + 1)
         population = retainAndKeepBest(population)
+    visualize_results()
     ENV.close()
     ENV = None    
 
@@ -192,4 +199,4 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.show()
     evolution_thread.join()
-    print(best_agents[-1].state)
+    print(best_agents[-1].state) # Print state from the best agent.

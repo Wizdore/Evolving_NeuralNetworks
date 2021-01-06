@@ -1,5 +1,11 @@
 # Evolutionary_Ann
 
+
+#### How to run
+using pipenv
+`pipenv install`
+`pipenv run python src/main.py`
+
 Given below is one solution state I found evolving over 50 generations for 'CartPole-v0' environment. 
 Ive never found it to fail even testing it over 10 minutes.
 ```python
